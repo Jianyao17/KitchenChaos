@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - master
-  pull_request:
 
 jobs:
   buildForAllSupportedPlatforms:
@@ -17,7 +16,6 @@ jobs:
         targetPlatform:
           - StandaloneWindows # Build a Windows standalone.
           - StandaloneWindows64 # Build a Windows 64-bit standalone.
-          - StandaloneLinux64 # Build a Linux 64-bit standalone.
           - Android # Build an Android .apk standalone app.
     steps:
       # Step 1: Checkout repository
@@ -53,7 +51,7 @@ jobs:
 
       # Step 5: Upload build artifact
       - name: Upload Build Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: build/${{ matrix.targetPlatform }}
