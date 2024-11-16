@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acccf1e6324543d2963284cb1af838b7, type: 3}
+  m_Name: CompleteBurger
+  m_EditorClassIdentifier: 
+  recipeName: CompleteBurger
+  KitchenObjects:
+  - {fileID: 11400000, guid: 186ab13dbe4837e40857f36d70d043c2, type: 2}
+  - {fileID: 11400000, guid: 8e9a6a070ebdc0f4ba4481668cce6278, type: 2}
+  - {fileID: 11400000, guid: f90e4caf70b1fee41ac037c6f75cb9f6, type: 2}
+  - {fileID: 11400000, guid: d188625284a5b04458e5ac33ed4219d2, type: 2}
+  - {fileID: 11400000, guid: 9f2c9b5115ac32e40a4075deed5a219e, type: 2}
