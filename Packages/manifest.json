@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.jianyao17.improvedtimers": "https://github.com/Jianyao17/Improved-Timers.git",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.cinemachine": "2.9.7",
     "com.unity.collab-proxy": "2.5.2",

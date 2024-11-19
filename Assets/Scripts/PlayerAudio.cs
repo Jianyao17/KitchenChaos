@@ -1,4 +1,5 @@
 using System;
+using ImprovedTimers;
 using UnityEngine;
 
 public class PlayerAudio : MonoBehaviour
@@ -8,21 +9,29 @@ public class PlayerAudio : MonoBehaviour
     public static event EventHandler OnAnyPlayerMoved;
     
     private Player _player;
-    private float _footstepTimer;
+    private CountdownTimer _footstepTimer;
 
     private void Awake()
     {
         _player = GetComponent<Player>();
+        _footstepTimer = new CountdownTimer(footstepTimerMax);
     }
 
     private void Update()
     {
-        _footstepTimer -= Time.deltaTime;
-        if (_footstepTimer < 0f)
+        if (_footstepTimer.IsFinished)
         {
-            _footstepTimer = footstepTimerMax;
+            _footstepTimer.Reset(footstepTimerMax);
+            _footstepTimer.Start();
+            
             if (_player.IsWalking)
                 OnAnyPlayerMoved?.Invoke(this, EventArgs.Empty);
         }
+    }
+    
+    private void OnDestroy()
+    {
+        _footstepTimer.Stop();
+        _footstepTimer.Dispose();
     }
 }

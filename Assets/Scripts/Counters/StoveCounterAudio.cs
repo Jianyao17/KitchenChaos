@@ -1,36 +1,34 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+using ImprovedTimers;
 using UnityEngine;
 
 public class StoveCounterAudio : MonoBehaviour
 {
     [SerializeField] private StoveCounter stoveCounter;
+    [SerializeField, Range(0f, 1f)] private float playInterval;
     
     private AudioSource _audioSource;
-    private float _soundTimer;
+    private CountdownTimer _soundTimer;
     private bool _playWarningSound;
 
     private void Awake()
     {
         _audioSource = GetComponent<AudioSource>();
+        _soundTimer = new CountdownTimer(playInterval);
     }
 
     private void Start()
     {
         stoveCounter.OnStateChanged += PlayAudioLoop;
+        _soundTimer.Start();
     }
 
     private void Update()
     {
-        if (_playWarningSound)
+        if (_playWarningSound && _soundTimer.IsFinished)
         {
-            _soundTimer -= Time.deltaTime;
-            if (_soundTimer <= 0)
-            {
-                _soundTimer = .2f;
-                AudioManager.Instance.PlayWarningSound(transform.position);
-            }
+            _soundTimer.Reset();
+            _soundTimer.Start();
+            AudioManager.Instance.PlayWarningSound(transform.position);
         }
     }
 
@@ -49,5 +47,11 @@ public class StoveCounterAudio : MonoBehaviour
             _audioSource.Pause();
             _playWarningSound = false;
         }
+    }
+    
+    private void OnDestroy()
+    {
+        _soundTimer.Stop();
+        _soundTimer.Dispose();
     }
 }

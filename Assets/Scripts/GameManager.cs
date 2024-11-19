@@ -1,4 +1,5 @@
 using System;
+using ImprovedTimers;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -10,9 +11,10 @@ public class GameManager : MonoBehaviour
         GameRunning,
         GameOver,
     }
-    
     public static GameManager Instance;
     
+    [SerializeField] private float waitingToStartDuration = 1f;
+    [SerializeField] private float startCountdownDuration = 3f;
     [SerializeField] private float gameRunningDuration = 30f;
     
     public bool IsGamePaused { get; private set; }
@@ -20,22 +22,21 @@ public class GameManager : MonoBehaviour
     public bool IsGameRunning => _gameState == GameState.GameRunning;
     public bool IsGameOver => _gameState == GameState.GameOver;
     
-    public float CountdownToStart => _countDownToStartTimer;
-    public float GameRunningTimeNormalized => 1 - (_gameRunningTimer / gameRunningDuration);
+    public float CountdownToStart => _gameState == GameState.CountdownToStart ? _timer.CurrentTime : -1f;
+    public float GameRunningTimeNormalized => 1 - (_timer.CurrentTime / gameRunningDuration);
 
     public event EventHandler OnGameStateChanged;
     public event EventHandler OnGamePaused;
     public event EventHandler OnGameUnpaused;
     
     private GameState _gameState;
-    private float _waitingToStartTimer = 1f;
-    private float _countDownToStartTimer = 3f;
-    private float _gameRunningTimer;
+    private CountdownTimer _timer;
 
     private void Awake()
     {
         Instance = this;
-        _gameState = GameState.WaitingToStart;
+        _timer = new CountdownTimer(0);
+        SetGameState(GameState.WaitingToStart, waitingToStartDuration);
     }
 
     private void Start()
@@ -61,36 +62,39 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if (!_timer.IsFinished) return;
+        
         switch (_gameState)
         {
             case GameState.WaitingToStart:
-                _waitingToStartTimer -= Time.deltaTime;
-                if (_waitingToStartTimer < 0)
-                {
-                    _gameState = GameState.CountdownToStart;
-                    OnGameStateChanged?.Invoke(this, EventArgs.Empty);
-                }
+                SetGameState(GameState.CountdownToStart, startCountdownDuration);
                 break;
             
             case GameState.CountdownToStart:
-                _countDownToStartTimer -= Time.deltaTime;
-                if (_countDownToStartTimer < 0)
-                {
-                    _gameState = GameState.GameRunning;
-                    _gameRunningTimer = gameRunningDuration;
-                    OnGameStateChanged?.Invoke(this, EventArgs.Empty);
-                }
+                SetGameState(GameState.GameRunning, gameRunningDuration);
                 break;
+            
             case GameState.GameRunning:
-                _gameRunningTimer -= Time.deltaTime;
-                if (_gameRunningTimer < 0)
-                {
-                    _gameState = GameState.GameOver;
-                    OnGameStateChanged?.Invoke(this, EventArgs.Empty);
-                }
+                SetGameState(GameState.GameOver, 0f);
                 break;
+            
             case GameState.GameOver:
                 break;
         }
+    }
+
+    // Set game state with running duration
+    private void SetGameState(GameState newState, float durationSeconds = 0)
+    {
+        _gameState = newState;
+        _timer.Reset(durationSeconds);
+        _timer.Start();
+        OnGameStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+    
+    private void OnDestroy()
+    {
+        _timer.Stop();
+        _timer.Dispose();
     }
 }

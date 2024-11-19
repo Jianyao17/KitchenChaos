@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ImprovedTimers;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -26,22 +27,22 @@ public class DeliveryManager : MonoBehaviour
     public int SuccessfulDeliveryCount => _successfulDeliveryCount;
     
     private int _successfulDeliveryCount = 0;
-    private float _spawnTimer;
+    private CountdownTimer _spawnTimer;
 
     private void Awake()
     {
         Instance = this;
+        _spawnTimer = new CountdownTimer(spawnTimerMax);
     }
 
     private void Update()
     {
-        _spawnTimer -= Time.deltaTime;
-
-        // Spawn new demanded recipe and add to list when timer runs out
+        // Spawn new demanded recipe and add to list when timer is finished
         // & list recipes less than maxRecipesQueue
-        if (_spawnTimer <= 0f)
+        if (_spawnTimer.IsFinished)
         {
-            _spawnTimer = spawnTimerMax; 
+            _spawnTimer.Reset();
+            _spawnTimer.Start();
             if (ListDemandedRecipes.Count < maxRecipesQueue)
             {
                 var demandedRecipe = listAvailableRecipes.Recipes[Random.Range(0, listAvailableRecipes.Recipes.Count)];
@@ -73,5 +74,11 @@ public class DeliveryManager : MonoBehaviour
             OnRecipeFailed?.Invoke(this, new AudioPosEventArgs 
             { Position = DeliveryCounter.Instance.transform.position }); 
         }
+    }
+
+    private void OnDestroy()
+    {
+        _spawnTimer.Stop();
+        _spawnTimer.Dispose();
     }
 }

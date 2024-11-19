@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.jianyao17.improvedtimers": {
+      "version": "https://github.com/Jianyao17/Improved-Timers.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "3e596ee9ed29e66cbde7b43a5fc7765b5594e7eb"
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,
