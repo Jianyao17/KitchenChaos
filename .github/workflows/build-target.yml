@@ -7,8 +7,29 @@ on:
       - "v*"
 
 jobs:
-  buildForAllTargetedPlatforms:
+  createRelease:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    # Note this. We are going to use that in further jobs.
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    
+    # Step 1: Create GitHub Release
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: "Release ${{ github.ref_name }}"
+        draft: false
+        prerelease: false
+  
+  buildTarget:
     name: Build for ${{ matrix.targetPlatform }}
+    needs: createRelease
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -42,47 +63,15 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
-
-      # Step 4: Upload build artifact
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Build-${{ matrix.targetPlatform }}
-          path: build/${{ matrix.targetPlatform }}
-          retention-days: 7
-
-  release:
-    name: Release Unity Game
-    needs: buildForAllTargetedPlatforms
-    runs-on: ubuntu-latest
-    
-    steps:
-      # Step 1: Download build artifact
-      - name: Download Build Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: unity-build
-          path: ./artifact-build
-      
-      # Step 2: Create GitHub Release
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }} 
-          release_name: "Release ${{ github.ref_name }}"
-          draft: false
-          prerelease: false
-      
-      # Step 3: Upload artifact ke GitHub Release
+          buildsPath: builds
+          
+      # Step 4: Upload artifact ke GitHub Release
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifact-build/**
-          asset_name: KitchenChaos-v${{ github.ref_name }}
+          upload_url: ${{ needs.createRelease.outputs.upload_url }}
+          asset_path: builds/${{ matrix.targetPlatform }}.zip
+          asset_name: KitchenChaos-${{ matrix.targetPlatform }}-v${{ github.ref_name }}.zip
           asset_content_type: application/zip
