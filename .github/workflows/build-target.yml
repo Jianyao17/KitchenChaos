@@ -1,13 +1,13 @@
-name: Build and Release for Multiple Platforms
+name: Build and Release Game
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - master
+    tags:
+      - "v*"
 
 jobs:
-  buildForAllSupportedPlatforms:
+  buildForAllTargetedPlatforms:
     name: Build for ${{ matrix.targetPlatform }}
     runs-on: ubuntu-latest
     strategy:
@@ -16,7 +16,6 @@ jobs:
         targetPlatform:
           - StandaloneWindows # Build a Windows standalone.
           - StandaloneWindows64 # Build a Windows 64-bit standalone.
-          - Android # Build an Android .apk standalone app.
     steps:
       # Step 1: Checkout repository
       - name: Checkout Repository
@@ -34,12 +33,7 @@ jobs:
           restore-keys: |
             Library-
 
-      # Step 3: Free disk space for Android builds
-      - name: Free Disk Space
-        if: matrix.targetPlatform == 'Android'
-        uses: jlumbroso/free-disk-space@v1.3.1
-
-      # Step 4: Build the project using GameCI
+      # Step 3: Build the project using GameCI
       - name: Build Unity Project
         uses: game-ci/unity-builder@v4
         env:
@@ -49,41 +43,46 @@ jobs:
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
 
-      # Step 5: Upload build artifact
+      # Step 4: Upload build artifact
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Build-${{ matrix.targetPlatform }}
           path: build/${{ matrix.targetPlatform }}
+          retention-days: 7
 
   release:
-    name: Create GitHub Release
-    needs: buildForAllSupportedPlatforms
+    name: Release Unity Game
+    needs: buildForAllTargetedPlatforms
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-
+    
     steps:
-      # Step 1: Checkout repository
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      # Step 2: Download build artifacts for all platforms
-      - name: Download Build Artifacts
+      # Step 1: Download build artifact
+      - name: Download Build Artifact
         uses: actions/download-artifact@v3
         with:
-          path: release-builds
-
-      # Step 3: Create a GitHub release with artifacts
-      - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
+          name: unity-build
+          path: ./artifact-build
+      
+      # Step 2: Create GitHub Release
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: release-builds/**
-          tag: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
-          body: |
-            Build for multiple platforms:
-            - Windows
-            - Android
+          tag_name: ${{ github.ref_name }} 
+          release_name: "Release ${{ github.ref_name }}"
           draft: false
           prerelease: false
+      
+      # Step 3: Upload artifact ke GitHub Release
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifact-build/**
+          asset_name: your-game-v${{ github.ref_name }}
+          asset_content_type: application/octet-stream
