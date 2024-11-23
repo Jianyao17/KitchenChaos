@@ -62,7 +62,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: unity-build
-          path: ./artifact-build
+          path: ./artifact-build/
       
       # Step 2: Create GitHub Release
       - name: Create Release
@@ -83,6 +83,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./artifact-build/**
+          asset_path: ./artifact-build/**/*.zip
           asset_name: KitchenChaos-v${{ github.ref_name }}
           asset_content_type: application/zip
