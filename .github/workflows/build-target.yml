@@ -1,13 +1,13 @@
-name: Build and Release for Multiple Platforms
+name: Build and Release Game
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - master
+    tags:
+      - "v*"
 
 jobs:
-  buildForAllSupportedPlatforms:
+  buildForAllTargetedPlatforms:
     name: Build for ${{ matrix.targetPlatform }}
     runs-on: ubuntu-latest
     strategy:
@@ -16,7 +16,6 @@ jobs:
         targetPlatform:
           - StandaloneWindows # Build a Windows standalone.
           - StandaloneWindows64 # Build a Windows 64-bit standalone.
-          - Android # Build an Android .apk standalone app.
     steps:
       # Step 1: Checkout repository
       - name: Checkout Repository
@@ -34,12 +33,7 @@ jobs:
           restore-keys: |
             Library-
 
-      # Step 3: Free disk space for Android builds
-      - name: Free Disk Space
-        if: matrix.targetPlatform == 'Android'
-        uses: jlumbroso/free-disk-space@v1.3.1
-
-      # Step 4: Build the project using GameCI
+      # Step 3: Build the project using GameCI
       - name: Build Unity Project
         uses: game-ci/unity-builder@v4
         env:
@@ -49,7 +43,7 @@ jobs:
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
 
-      # Step 5: Upload build artifact
+      # Step 4: Upload build artifact
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -58,9 +52,8 @@ jobs:
 
   release:
     name: Create GitHub Release
-    needs: buildForAllSupportedPlatforms
+    needs: buildForAllTargetedPlatforms
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
 
     steps:
       # Step 1: Checkout repository
@@ -84,6 +77,5 @@ jobs:
           body: |
             Build for multiple platforms:
             - Windows
-            - Android
           draft: false
           prerelease: false
