@@ -63,7 +63,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           targetPlatform: ${{ matrix.targetPlatform }}
-          buildsPath: builds
+          buildsPath: ./builds
           
       # Step 4: Upload artifact ke GitHub Release
       - name: Upload Release Asset
@@ -72,6 +72,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.createRelease.outputs.upload_url }}
-          asset_path: builds/${{ matrix.targetPlatform }}.zip
+          asset_path: ./builds/${{ matrix.targetPlatform }}.zip
           asset_name: KitchenChaos-${{ matrix.targetPlatform }}-v${{ github.ref_name }}.zip
           asset_content_type: application/zip
